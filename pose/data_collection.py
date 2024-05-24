@@ -9,15 +9,17 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # Create a directory to save landmark data
-data_dir = "sign_data"
+data_dir = "./sign_data"
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
 # Define a list to store the collected data
 collected_data = []
+labels = ["Absent", "Again", "ASl", "Bathroom", "Due", "Favorite", "Go-to", "Homework", "learn", "Movie", "Need", "No", "Please", "Practice", "School", "Sign", "Slow-down", "thank you", "Today", "Yes"]
+label_index = 0
 
 # Take live camera input for pose detection
-video_path = "C:/Users/KWAME/Downloads//Greetings in ASL _ ASL - American Sign Language.mp4"
+video_path = "C:/Users/KWAME/Downloads//American Sign Language.mp4"
 cap = cv2.VideoCapture(video_path)
 
 def preprocess_landmarks(landmarks):
@@ -30,6 +32,8 @@ def preprocess_landmarks(landmarks):
 # Main loop for data collection
 while True:
     ret, img = cap.read()  # Read a frame from the camera
+    if not ret:
+        break
     img = cv2.resize(img, (600, 400))  # Resize the frame for display
 
     results = pose.process(img)  # Perform pose detection on the frame
@@ -43,13 +47,23 @@ while True:
 
         # Wait for key press to label the pose
         key = cv2.waitKey(1) & 0xFF
-        if key in [ord('a'), ord('b'), ord('c'),ord('d'),ord('e')]:  # If a valid label key is pressed
-            label = chr(key)  # Convert the key to a character label
+        if key == ord('q'):  # Press 'q' to quit
+            break
+        elif key == ord('s') and label_index < len(labels):  # Press 's' to label the current pose
+            label = labels[label_index]  # Get the current label from the array
             collected_data.append({"label": label, "landmarks": landmarks_data})  # Append the labeled data to the list
             print(f"Collected pose {label}")
-
-        if key == ord('q'):  # If 'q' is pressed, exit the loop
-            break
+            # label_index += 1  # Increment the label index after labeling
+            if label_index >= len(labels):
+                print("All labels have been assigned.")
+                break
+        elif key == ord('n'):  # Press 'n' to go to the next pose
+            if label_index < len(labels):
+                label_index += 1  # Increment the label index
+                print(f"Next label: {labels[label_index]}")
+            else:
+                print("No more signs")
+                break
 
 cap.release()  # Release the camera
 cv2.destroyAllWindows()  # Close all OpenCV windows

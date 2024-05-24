@@ -15,7 +15,7 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # Take live camera input for pose detection
-video_path = "C:/Users/KWAME/Downloads//Greetings in ASL _ ASL - American Sign Language.mp4"
+video_path = "C:/Users/KWAME/Downloads//American Sign Language.mp4"
 cap = cv2.VideoCapture(video_path)
 
 def preprocess_landmarks(landmarks):

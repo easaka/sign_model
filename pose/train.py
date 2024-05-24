@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report
 import pickle
 
 # Load the collected data
-data_dir = "sign_data"
+data_dir = "./sign_data"
 with open(os.path.join(data_dir, 'collected_data.json'), 'r') as f:
     collected_data = json.load(f)
 

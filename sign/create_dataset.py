@@ -12,7 +12,8 @@ mp_drawing_styles = mp.solutions.drawing_styles
 
 hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
 
-DATA_DIR = './data'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(script_dir, 'data')
 
 data = []
 labels = []
