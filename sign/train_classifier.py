@@ -10,7 +10,7 @@ import numpy as np  # For numerical operations
 patch_sklearn()
 
 # Load the data from a pickle file
-data_dict = pickle.load(open('./data.pickle', 'rb'))
+data_dict = pickle.load(open('./sign/data.pickle', 'rb'))
 data = np.asarray(data_dict['data'])  # Extract features from the data dictionary
 labels = np.asarray(data_dict['labels'])  # Extract labels from the data dictionary
 
@@ -42,5 +42,5 @@ score = compute_accuracy(y_test, y_predict)
 print('Accuracy:', score * 100, '%')
 
 # Save the trained model to a pickle file
-with open('model.p', 'wb') as f:
+with open('./sign/model.p', 'wb') as f:
     pickle.dump({'model': model}, f)

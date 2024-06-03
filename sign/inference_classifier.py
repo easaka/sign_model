@@ -5,10 +5,11 @@ import mediapipe as mp  # For hand tracking and landmark detection
 import numpy as np  # For numerical operations
 
 # Load the trained model from a pickle file
-model_dict = pickle.load(open('./model.p', 'rb'))
+model_dict = pickle.load(open('./sign/model.p', 'rb'))
 model = model_dict['model']
 
 # Open the webcam to capture video
+pic="C:/Users/KWAME/OneDrive/Documents/personal/project/sign-language-detector-python/sign/data/0/A0 - Copy - Copy - Copy.jpg"
 cap = cv2.VideoCapture(0)
 
 # Initialize the MediaPipe Hands module

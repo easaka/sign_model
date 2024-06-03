@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report
 import pickle
 
 # Load the collected data
-data_dir = "./sign_data"
+data_dir = "./pose/sign_data"
 with open(os.path.join(data_dir, 'collected_data.json'), 'r') as f:
     collected_data = json.load(f)
 
@@ -32,8 +32,8 @@ y_pred = classifier.predict(X_test)
 print(classification_report(y_test, y_pred))
 
 # Save the trained classifier and scaler
-with open('sign_pose_classifier.pkl', 'wb') as f:
+with open('./pose/sign_pose_classifier.pkl', 'wb') as f:
     pickle.dump(classifier, f)
 
-with open('scaler.pkl', 'wb') as f:
+with open('./pose/scaler.pkl', 'wb') as f:
     pickle.dump(scaler, f)

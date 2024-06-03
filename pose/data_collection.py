@@ -9,7 +9,7 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # Create a directory to save landmark data
-data_dir = "./sign_data"
+data_dir = "./pose/sign_data"
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 

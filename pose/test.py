@@ -4,10 +4,10 @@ import numpy as np
 import pickle
 
 # Load the trained classifier and scaler
-with open('sign_pose_classifier.pkl', 'rb') as f:
+with open('./pose/sign_pose_classifier.pkl', 'rb') as f:
     classifier = pickle.load(f)
 
-with open('scaler.pkl', 'rb') as f:
+with open('./pose/scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 # Initialize mediapipe pose solution
