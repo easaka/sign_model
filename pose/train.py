@@ -16,6 +16,9 @@ with open(os.path.join(data_dir, 'collected_data.json'), 'r') as f:
 X = np.array([sample['landmarks'] for sample in collected_data])
 y = np.array([sample['label'] for sample in collected_data])
 
+# Check the shape of X to verify the number of features
+print(f"Shape of X: {X.shape}")
+
 # Normalize the landmarks
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)

@@ -18,12 +18,18 @@ print(f"Scaler type: {type(scaler)}")
 if not hasattr(scaler, 'transform'):
     raise ValueError("Loaded scaler does not have a 'transform' method")
 
+# Verify the number of features expected by the scaler
+expected_features = scaler.mean_.shape[0]
+print(f"Expected number of features: {expected_features}")
+
 app = FastAPI()
 
 def extract_landmarks_from_image(image: np.ndarray) -> np.ndarray:
     # Dummy implementation, replace with actual landmark extraction logic
-    # For example, using a pre-trained model to detect landmarks
-    landmarks = np.random.rand(21, 3).flatten()  # Example: 21 landmarks with x, y, z coordinates
+    # Ensure this returns the correct number of features
+    landmarks = np.random.rand(21, 3).flatten()  # Example: 21 landmarks with x, y, z coordinates (63 features)
+    if landmarks.shape[0] != expected_features:
+        raise ValueError(f"Extracted landmarks have {landmarks.shape[0]} features, but {expected_features} were expected.")
     return landmarks
 
 @app.post("/predict")
