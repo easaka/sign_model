@@ -1,8 +1,71 @@
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 import pickle
-from fastapi import FastAPI, File, UploadFile, HTTPException
 import cv2
+import mediapipe as mp
 import numpy as np
-import uvicorn
+from PIL import Image
+import io
+from io import BytesIO
+
+
+app = FastAPI()
+
+# Load the trained model and labels dictionary
+model_dict = pickle.load(open('./sign/model.p', 'rb'))
+model = model_dict['model']
+labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H'}
+
+# Initialize MediaPipe Hands module
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.3)
+
+class PredictionResponse(BaseModel):
+    predicted_character: str
+
+def process_image(image: Image.Image):
+    # Convert image to RGB
+    image_rgb = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
+    results = hands.process(image_rgb)
+
+    if not results.multi_hand_landmarks:
+        raise HTTPException(status_code=400, detail="No hand detected in the image.")
+
+    data_aux = []
+    x_ = []
+    y_ = []
+
+    for hand_landmarks in results.multi_hand_landmarks:
+        for i in range(len(hand_landmarks.landmark)):
+            x = hand_landmarks.landmark[i].x
+            y = hand_landmarks.landmark[i].y
+            x_.append(x)
+            y_.append(y)
+
+        for i in range(len(hand_landmarks.landmark)):
+            x = hand_landmarks.landmark[i].x
+            y = hand_landmarks.landmark[i].y
+            data_aux.append(x - min(x_))
+            data_aux.append(y - min(y_))
+
+    prediction = model.predict([np.asarray(data_aux)])
+    predicted_character = labels_dict[int(prediction[0])]
+    return predicted_character
+
+@app.post("/predict", response_model=PredictionResponse)
+async def predict(file: UploadFile = File(...)):
+    try:
+        # Read the file as an image
+        image = Image.open(io.BytesIO(await file.read()))
+        predicted_character = process_image(image)
+        return {"predicted_character": predicted_character}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # Load the trained classifier and scaler
 with open('./pose/sign_pose_classifier.pkl', 'rb') as f:
@@ -11,51 +74,51 @@ with open('./pose/sign_pose_classifier.pkl', 'rb') as f:
 with open('./pose/scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
-# Debugging: Check the type of the scaler
-print(f"Scaler type: {type(scaler)}")
+# Initialize mediapipe pose solution
+mp_pose = mp.solutions.pose
+pose = mp_pose.Pose()
 
-# Ensure scaler has transform method
-if not hasattr(scaler, 'transform'):
-    raise ValueError("Loaded scaler does not have a 'transform' method")
+class PredictionResponse(BaseModel):
+    predicted_sign: str
 
-# Verify the number of features expected by the scaler
-expected_features = scaler.mean_.shape[0]
-print(f"Expected number of features: {expected_features}")
+def preprocess_landmarks(landmarks):
+    data = []
+    for landmark in landmarks.landmark:
+        data.extend([landmark.x, landmark.y, landmark.z])
+    return data
 
-app = FastAPI()
-
-def extract_landmarks_from_image(image: np.ndarray) -> np.ndarray:
-    # Dummy implementation, replace with actual landmark extraction logic
-    # Ensure this returns the correct number of features
-    landmarks = np.random.rand(21, 3).flatten()  # Example: 21 landmarks with x, y, z coordinates (63 features)
-    if landmarks.shape[0] != expected_features:
-        raise ValueError(f"Extracted landmarks have {landmarks.shape[0]} features, but {expected_features} were expected.")
-    return landmarks
-
-@app.post("/predict")
-async def predict_sign(file: UploadFile = File(...)):
+@app.post("/predict/pose", response_model=PredictionResponse)
+async def predict(file: UploadFile = File(...)):
     try:
-        # Read image from the uploaded file
+        # Read the uploaded video file
         contents = await file.read()
-        np_arr = np.frombuffer(contents, np.uint8)
-        image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        video_path = 'uploaded_video.mp4'
+        with open(video_path, 'wb') as f:
+            f.write(contents)
 
-        # Extract landmarks from the image
-        landmarks = extract_landmarks_from_image(image)
+        cap = cv2.VideoCapture(video_path)
 
-        # Normalize the landmarks
-        landmarks_scaled = scaler.transform([landmarks])
+        while True:
+            ret, img = cap.read()
+            if not ret:
+                break
 
-        # Make prediction
-        prediction = classifier.predict(landmarks_scaled)
+            img = cv2.resize(img, (600, 400))
+            results = pose.process(img)
 
-        return {"prediction": prediction[0]}
+            if results.pose_landmarks:
+                landmarks_data = preprocess_landmarks(results.pose_landmarks)
+                landmarks_data_scaled = scaler.transform([landmarks_data])
+                predicted_sign = classifier.predict(landmarks_data_scaled)
+                predicted_sign = predicted_sign[0]
+                break
+
+        cap.release()
+        return {"predicted_sign": predicted_sign}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Sign Language Prediction API"}
-
 if __name__ == "__main__":
-    uvicorn.run(app, host='localhost', port=8000)
+    import uvicorn
+    uvicorn.run(app, host="localhost", port=8000)
