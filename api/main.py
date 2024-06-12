@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import pickle
 import cv2
@@ -13,7 +12,7 @@ from io import BytesIO
 
 app = FastAPI()
 
-# Load the trained model and labels dictionary
+# Load the trained model and labels dictionary for hand signs
 model_dict = pickle.load(open('./sign/model.p', 'rb'))
 model = model_dict['model']
 labels_dict = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G', 7: 'H'}
@@ -56,7 +55,7 @@ def process_image(image: Image.Image):
     predicted_character = labels_dict[int(prediction[0])]
     return predicted_character
 
-@app.post("/predict", response_model=PredictionResponse)
+@app.post("/predict/sign", response_model=PredictionResponse)
 async def predict(file: UploadFile = File(...)):
     try:
         # Read the file as an image
@@ -67,7 +66,7 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Load the trained classifier and scaler
+# Load the trained classifier and scaler for pose signs
 with open('./pose/sign_pose_classifier.pkl', 'rb') as f:
     classifier = pickle.load(f)
 
@@ -78,8 +77,8 @@ with open('./pose/scaler.pkl', 'rb') as f:
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
-class PredictionResponse(BaseModel):
-    predicted_sign: str
+class PosePredictionResponse(BaseModel):
+    predicted_signs: list
 
 def preprocess_landmarks(landmarks):
     data = []
@@ -87,8 +86,8 @@ def preprocess_landmarks(landmarks):
         data.extend([landmark.x, landmark.y, landmark.z])
     return data
 
-@app.post("/predict/pose", response_model=PredictionResponse)
-async def predict(file: UploadFile = File(...)):
+@app.post("/predict/pose", response_model=PosePredictionResponse)
+async def predict_pose(file: UploadFile = File(...)):
     try:
         # Read the uploaded video file
         contents = await file.read()
@@ -97,6 +96,7 @@ async def predict(file: UploadFile = File(...)):
             f.write(contents)
 
         cap = cv2.VideoCapture(video_path)
+        predicted_signs = []
 
         while True:
             ret, img = cap.read()
@@ -110,11 +110,10 @@ async def predict(file: UploadFile = File(...)):
                 landmarks_data = preprocess_landmarks(results.pose_landmarks)
                 landmarks_data_scaled = scaler.transform([landmarks_data])
                 predicted_sign = classifier.predict(landmarks_data_scaled)
-                predicted_sign = predicted_sign[0]
-                break
+                predicted_signs.append(predicted_sign[0])
 
         cap.release()
-        return {"predicted_sign": predicted_sign}
+        return {"predicted_signs": predicted_signs}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
