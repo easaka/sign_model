@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Language Translator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Sign Language Translator</h1>
+  </header>
+  <main>
+    <div class="camera-container">
+      <h3>Record sign To Translate</h3>
+      <video id="user-camera"></video>
+      <button id="record-button">Record Sign</button>
+      <div class="recording-indicator" hidden>Recording...</div>
+    </div>
+    <div class="translation-container">
+      <h3>Translated Sign To word</h3>
+      <p id="translation-text"></p>
+      <button id="clear-button" disabled>Clear Translation</button>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
