@@ -1,15 +1,80 @@
 body {
-  font-family: sans-serif;
+  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #f8f8f8; /* Light gray background */
+  background-color: #f0f0f0;
 }
 
+.navbar {
+  background-color: #333;
+  overflow: hidden;
+}
+
+.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar li {
+  float: left;
+}
+
+.navbar li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.navbar li a:hover {
+  background-color: #111;
+}
+
+/* Landing Page Styles */
+.landing-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 50px);
+  background: linear-gradient(to right, #6a11cb, #2575fc);
+}
+
+.landing-content {
+  text-align: center;
+  color: white;
+}
+
+.landing-content h1 {
+  font-size: 3em;
+  margin: 0;
+}
+
+.landing-content p {
+  font-size: 1.2em;
+}
+
+.start-button {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.start-button:hover {
+  background-color: #45a049;
+}
+
+
+
+
 header, h3 {
-  background-color: gold; /* Light blue primary */
+  /* background-color: gold; Light blue primary */
   padding: 15px;
   display: flex;
   justify-content: center;
@@ -48,12 +113,13 @@ main {
   max-width: 500px;
   height: auto; /* Maintain aspect ratio */
   border: none;
+  border-radius: 5px;
   margin: 5px;
 }
 
 #record-button {
-  background-color: gold;
-  color: black;
+  background-color: #4CAF50;
+  color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -75,9 +141,9 @@ main {
 }
 
 #clear-button {
-  background-color: gold;
+  background-color: #4CAF50;
   border: 1px solid #ccc;
-  color: #000;
+  color: white;
   padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;

@@ -3,44 +3,13 @@ const recordButton = document.getElementById('record-button');
 const recordingIndicator = document.querySelector('.recording-indicator');
 const translationText = document.getElementById('translation-text');
 const clearButton = document.getElementById('clear-button');
-
-let mediaRecorder;
-let recordedChunks = [];
+let isRecording = false;
+let ws;
 
 // Request access to the camera and display the video stream
 navigator.mediaDevices.getUserMedia({ video: true })
   .then(stream => {
     video.srcObject = stream;
-
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = event => {
-      if (event.data.size > 0) {
-        recordedChunks.push(event.data);
-      }
-    };
-    mediaRecorder.onstop = async () => {
-      const blob = new Blob(recordedChunks, { type: 'video/mp4' });
-      recordedChunks = [];
-      recordingIndicator.hidden = true;
-      recordButton.disabled = false;
-      clearButton.disabled = false;
-
-      const formData = new FormData();
-      formData.append('file', blob, 'recorded_sign.mp4');
-
-      // Send the video to the backend for processing
-      const response = await fetch('http://localhost:8000/predict/sign', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        translationText.textContent = result.predicted_signs.join(', ');
-      } else {
-        translationText.textContent = 'Error in translation. Please try again.';
-      }
-    };
   })
   .catch(error => {
     console.error('Error accessing camera:', error);
@@ -48,18 +17,81 @@ navigator.mediaDevices.getUserMedia({ video: true })
 
 // Start and stop recording when the button is clicked
 recordButton.addEventListener('click', () => {
-  if (mediaRecorder.state === 'inactive') {
-    mediaRecorder.start();
-    recordingIndicator.hidden = false;
-    recordButton.textContent = 'Stop Recording';
+  if (!isRecording) {
+    startRecording();
   } else {
-    mediaRecorder.stop();
-    recordButton.textContent = 'Record Sign';
+    stopRecording();
   }
 });
+
+function startRecording() {
+  ws = new WebSocket('http://localhost:8000/ws/predict/pose');
+
+  ws.onopen = () => {
+    isRecording = true;
+    recordingIndicator.hidden = false;
+    recordButton.textContent = 'Stop Recording';
+    sendFrames();
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.predicted_signs.length > 0) {
+      translationText.textContent = `Predicted Sign: ${data.predicted_signs[0]}`;
+    } else {
+      translationText.textContent = 'No sign detected';
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+  };
+
+  ws.onclose = () => {
+    isRecording = false;
+    recordingIndicator.hidden = true;
+    recordButton.textContent = 'Start Recording';
+  };
+}
+
+function stopRecording() {
+  if (ws) {
+    ws.close();
+  }
+}
+
+function sendFrames() {
+  if (!isRecording) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext('2d');
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob(blob => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const arrayBuffer = reader.result;
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(arrayBuffer);
+      }
+      // Schedule the next frame
+      setTimeout(sendFrames, 1000); // Adjust the interval as needed
+    };
+    reader.readAsArrayBuffer(blob);
+  }, 'image/jpeg');
+}
 
 // Clear the translation text when the clear button is clicked
 clearButton.addEventListener('click', () => {
   translationText.textContent = '';
   clearButton.disabled = true;
 });
+
+// Enable the clear button when there's translation text
+const observer = new MutationObserver(() => {
+  clearButton.disabled = translationText.textContent === '';
+});
+
+observer.observe(translationText, { childList: true });
