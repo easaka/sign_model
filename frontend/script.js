@@ -25,7 +25,7 @@ recordButton.addEventListener('click', () => {
 });
 
 function startRecording() {
-  ws = new WebSocket('https://sign-model.onrender.com');
+  ws = new WebSocket('https://sign-model.onrender.com/ws/predict/pose');
 
   ws.onopen = () => {
     isRecording = true;

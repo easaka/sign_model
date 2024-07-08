@@ -18,10 +18,10 @@ app.add_middleware(
 )
 
 # Load the trained classifier and scaler for pose signs
-with open('./pose/sign_pose_classifier.pkl', 'rb') as f:
+with open('../pose/sign_pose_classifier.pkl', 'rb') as f:
     classifier = pickle.load(f)
 
-with open('./pose/scaler.pkl', 'rb') as f:
+with open('../pose/scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 # Initialize mediapipe pose solution
