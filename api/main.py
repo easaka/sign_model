@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pickle
+import uvicorn
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -60,6 +61,6 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         await websocket.close()
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="localhost", port=8000)
