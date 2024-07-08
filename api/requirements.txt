@@ -4,5 +4,6 @@ uvicorn
 python-multipart
 pillow
 tensorflow-serving-api===2.5.0
+cvzone==1.6.1
 matplotlib
 numpy
